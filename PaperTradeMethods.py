@@ -149,18 +149,18 @@ def GetRoleID(Job):
 
 # /help generate embed
 def HelpEmbed(Gold):
-    ImageFile1 = interactions.File(filename = "Discord/Images/OriginalLogoInvestantTHIN.png")
-    ImageFile2 = interactions.File(filename = "Discord/Images/FaviconOriginal.png")
-    ImageFile3 = interactions.File(filename = "Discord/Images/FaviconTransparent.png")
+    ImageFile1 = interactions.File(filename = "Images/OriginalLogoInvestantTHIN.png")
+    ImageFile2 = interactions.File(filename = "Images/FaviconOriginal.png")
+    ImageFile3 = interactions.File(filename = "Images/FaviconTransparent.png")
 
     if Gold:
         embed = interactions.Embed(title = "**Investant | A Paper Money Platform**", description = "We're Building The Most Advanced Market-Based Paper Economy On Discord", color = 0xEBA773)
-        ImageFile4 = interactions.File(filename = "Discord/Images/FaviconGOLD.png")
+        ImageFile4 = interactions.File(filename = "Images/FaviconGOLD.png")
         files = [ImageFile1, ImageFile2, ImageFile3, ImageFile4]
         embed.set_author(name = "PaperTrade", url = "https://discord.gg/YbU4eQ78", icon_url = "attachment://FaviconGOLD.png")
     else:
         embed = interactions.Embed(title = "**Investant | A Paper Money Platform**", description = "We're Building The Most Advanced Market-Based Paper Economy On Discord", color = 0x40C9FF)
-        ImageFile4 = interactions.File(filename = "Discord/Images/FaviconWHITE.png")
+        ImageFile4 = interactions.File(filename = "Images/FaviconWHITE.png")
         files = [ImageFile1, ImageFile2, ImageFile3, ImageFile4]
         embed.set_author(name = "PaperTrade", url = "https://discord.gg/YbU4eQ78", icon_url = "attachment://FaviconWHITE.png")
 
@@ -204,16 +204,16 @@ def ReturningUserMessage(member, Job, UserCashTotal, UserChecking, UserSavings, 
 # Create ITMM Embedded Message for /itmm
 def GenerateITMMEmbed(Positions, ITMMCashBalance, ITMMCashProceeds, NumUsersInvested, Gold: bool):
     # PREPARE EMBED FOR ADDING ITMM FUND INFORMATION
-    ImageFile1 = interactions.File(filename = "Discord/Images/OriginalLogoInvestantTHIN.png")
-    ImageFile2 = interactions.File(filename = "Discord/Images/FaviconOriginal.png")
-    ImageFile3 = interactions.File(filename = "Discord/Images/FaviconTransparent.png")
+    ImageFile1 = interactions.File(filename = "Images/OriginalLogoInvestantTHIN.png")
+    ImageFile2 = interactions.File(filename = "Images/FaviconOriginal.png")
+    ImageFile3 = interactions.File(filename = "Images/FaviconTransparent.png")
     if Gold:
         embed = interactions.Embed(
             title = "Investant Total Money Market Fund",
             description = "The Investant Total Money Market Fund is a Hedge Fund Internally Managed by InvestantMax Users. Ability to Invest in the Fund Coming Soon.",
             color = 0xEBA773
         )
-        ImageFile4 = interactions.File(filename = "Discord/Images/FaviconGOLD.png")
+        ImageFile4 = interactions.File(filename = "Images/FaviconGOLD.png")
         files = [ImageFile1, ImageFile2, ImageFile3, ImageFile4]
         embed.set_author(name = "PaperTrade", url = "https://discord.gg/YbU4eQ78", icon_url = "attachment://FaviconGOLD.png")
     else:
@@ -222,7 +222,7 @@ def GenerateITMMEmbed(Positions, ITMMCashBalance, ITMMCashProceeds, NumUsersInve
             description = "The Investant Total Money Market Fund is a Hedge Fund Internally Managed by InvestantMax Users. Ability to Invest in the Fund Coming Soon.",
             color = 0x40C9FF
         )
-        ImageFile4 = interactions.File(filename = "Discord/Images/FaviconWHITE.png")
+        ImageFile4 = interactions.File(filename = "Images/FaviconWHITE.png")
         files = [ImageFile1, ImageFile2, ImageFile3, ImageFile4]
         embed.set_author(name = "PaperTrade", url = "https://discord.gg/YbU4eQ78", icon_url = "attachment://FaviconWHITE.png")
     embed.set_thumbnail(url = "attachment://FaviconTransparent.png", width = 50, height = 50)
@@ -263,16 +263,16 @@ def GenerateITMMEmbed(Positions, ITMMCashBalance, ITMMCashProceeds, NumUsersInve
 # Create Portfolio Embedded Message for /portfolio
 def GeneratePortfolioEmbed(Positions, UserCashBalance, UserCashProceeds, UserChecking, UserSavings, Gold: bool):
     # PREPARE EMBED FOR ADDING ITMM FUND INFORMATION
-    ImageFile1 = interactions.File(filename = "Discord/Images/OriginalLogoInvestantTHIN.png")
-    ImageFile2 = interactions.File(filename = "Discord/Images/FaviconOriginal.png")
-    ImageFile3 = interactions.File(filename = "Discord/Images/FaviconTransparent.png")
+    ImageFile1 = interactions.File(filename = "Images/OriginalLogoInvestantTHIN.png")
+    ImageFile2 = interactions.File(filename = "Images/FaviconOriginal.png")
+    ImageFile3 = interactions.File(filename = "Images/FaviconTransparent.png")
     if Gold:
         embed = interactions.Embed(
             title = "Investant | Individual Brokerage Account",
             description = "A Current View of all Balances Tied to your Investant Portfolio",
             color = 0xEBA773
         )
-        ImageFile4 = interactions.File(filename = "Discord/Images/FaviconGOLD.png")
+        ImageFile4 = interactions.File(filename = "Images/FaviconGOLD.png")
         files = [ImageFile1, ImageFile2, ImageFile3, ImageFile4]
         embed.set_author(name = "PaperTrade", url = "https://discord.gg/YbU4eQ78", icon_url = "attachment://FaviconGOLD.png")
     else:
@@ -281,7 +281,7 @@ def GeneratePortfolioEmbed(Positions, UserCashBalance, UserCashProceeds, UserChe
             description = "A Current View of all Balances Tied to your Investant Portfolio",
             color = 0x40C9FF
         )
-        ImageFile4 = interactions.File(filename = "Discord/Images/FaviconWHITE.png")
+        ImageFile4 = interactions.File(filename = "Images/FaviconWHITE.png")
         files = [ImageFile1, ImageFile2, ImageFile3, ImageFile4]
         embed.set_author(name = "PaperTrade", url = "https://discord.gg/YbU4eQ78", icon_url = "attachment://FaviconWHITE.png")
     embed.set_thumbnail(url = "attachment://FaviconTransparent.png", width = 50, height = 50)
