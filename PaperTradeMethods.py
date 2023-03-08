@@ -28,41 +28,6 @@ def TGetNews(ticker):
         TickerNews += f"{Article['title']}: {Article['link']}\n"
     return TickerNews
 
-# Calculate Revenue and return string for an equity
-def TCalcRevenue(ticker):
-    stock = yq.Ticker(ticker)
-    Data = stock.income_statement(frequency = 'a')
-
-    Revenue, RevGrowth, Year = [], [], []
-
-    for i in range(len(Data)):
-
-        if Data.iloc[i][1] != '12M': # If this is not annual data, then skip it
-            continue
-
-        CurrentRev = Data.iloc[i]['TotalRevenue']
-        Revenue.append(CurrentRev)
-        Year.append(str(Data.iloc[i][0])[:4]) # Grabs the first 4 digits (the year) from the datetime as a string
-
-        if i == 0: # No information for revenue growth on year 0
-            RevGrowth.append(0)
-            continue
-
-        PreviousRev = Revenue[i - 1]
-        RevChange = round(((CurrentRev / PreviousRev) - 1) * 100, 2)
-        RevGrowth.append(RevChange)
-
-    TotalIndices = len(Year)
-    LastIndex = TotalIndices - 1
-
-    AverageRevenueGrowth = round(np.sum(RevGrowth) / LastIndex, 2)
-
-    Output = f"Revenue for **{ticker}** in {Year[LastIndex]} was ${Revenue[LastIndex]:,.2f}.\n"
-    Output += "-----------------------------------------------------------------------\n"
-    Output += f"*This is a {RevGrowth[LastIndex]}% increase from the year prior.*\n"
-    Output += f"*{ticker} has averaged {AverageRevenueGrowth}% growth in revenue per year for the last {LastIndex} years.*"
-    return Output
-
 # Generate random job and salary for discord user
 def GiveJob():
     Jobs = {
@@ -107,6 +72,17 @@ def GetRoleID(Job):
         "Politician": 1076732702235033660
     }
     return RoleIDs[Job]
+
+# Check if user is in the Investant server
+async def IsMemberInGuild(ctx, UserID, InvestantServerID, PaperTradeBot):
+    InvestantGuild = await interactions.get(PaperTradeBot, interactions.Guild, object_id = InvestantServerID)
+    AllMembers = await InvestantGuild.get_all_members()
+    for member in AllMembers:
+        if member.id == UserID:
+            return True
+    await ctx.send(f"I'm sorry, I don't seem to recall knowing you... Feel free to join!")
+    await ctx.send("https://discord.gg/SFUKKjWEjH")
+    return False
 
 # endregion MISCELLANEOUS
 # ------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -349,20 +325,9 @@ def GenerateBankingString(UserID, UserChecking, UserSavings):
 def GenerateFailedTransferString(UserID):
     FailedTransferString = f"I'm sorry, <@{UserID}>. Please double-check your transfer parameters.\n"
     FailedTransferString += "The Withdraw and Deposit accounts cannot be the same account.\n"
-    FailedTransferString += "The 'Withdraw' account is the balance from which you would like to remove the funds.\n"
-    FailedTransferString += "The 'Deposit' account is the balance to which you would like to add the funds."
+    FailedTransferString += "'Account1' is the balance from which you would like to remove the funds.\n"
+    FailedTransferString += "'Account2' is the balance to which you would like to add the funds."
     return FailedTransferString
-
-# Check if user is in the Investant server
-async def IsMemberInGuild(ctx, UserID, InvestantServerID, PaperTradeBot):
-    InvestantGuild = await interactions.get(PaperTradeBot, interactions.Guild, object_id = InvestantServerID)
-    AllMembers = await InvestantGuild.get_all_members()
-    for member in AllMembers:
-        if member.id == UserID:
-            return True
-    await ctx.send(f"I'm sorry, I don't seem to recall knowing you... Feel free to join!")
-    await ctx.send("https://discord.gg/SFUKKjWEjH")
-    return False
 
 # ITMM BUY TRANSACTION STRING
 def ITMMBuyString(UserID, quantity, ticker, cost, price, NewCashBalance):
@@ -463,7 +428,7 @@ def PayoutSalaries(PaperTradeDB):
 
         # Calculate payment and new checking balance
         # 0.01916496 derives from 1461 days in a 4-year period with leap years, divided by 28 (7 days/week * 4 years)
-        Payment = round(UserSalary * 0.01916496, 2)
+        Payment = round(UserSalary * 0.01916496, 2) # Weekly Payment
         TotalPayout += Payment
         NewCheckingBalance = round(UserCheckingBalance + Payment, 2)
 
@@ -871,8 +836,37 @@ async def NewsMainMethod(ctx, GuildMember, ticker, DirectMessage):
 
 # /revenue MAIN METHOD
 async def RevenueMainMethod(ctx, ticker):
-    ticker = ticker.upper() # Make the ticker uppercase
-    Output = TCalcRevenue(ticker)
+    stock = yq.Ticker(ticker.upper())
+    Data = stock.income_statement(frequency = 'a')
+
+    Revenue, RevGrowth, Year = [], [], []
+
+    for i in range(len(Data)):
+
+        if Data.iloc[i][1] != '12M': # If this is not annual data, then skip it
+            continue
+
+        CurrentRev = Data.iloc[i]['TotalRevenue']
+        Revenue.append(CurrentRev)
+        Year.append(str(Data.iloc[i][0])[:4]) # Grabs the first 4 digits (the year) from the datetime as a string
+
+        if i == 0: # No information for revenue growth on year 0
+            RevGrowth.append(0)
+            continue
+
+        PreviousRev = Revenue[i - 1]
+        RevChange = round(((CurrentRev / PreviousRev) - 1) * 100, 2)
+        RevGrowth.append(RevChange)
+
+    TotalIndices = len(Year)
+    LastIndex = TotalIndices - 1
+
+    AverageRevenueGrowth = round(np.sum(RevGrowth) / LastIndex, 2)
+
+    Output = f"Revenue for **{ticker}** in {Year[LastIndex]} was ${Revenue[LastIndex]:,.2f}.\n"
+    Output += "-----------------------------------------------------------------------\n"
+    Output += f"*This is a {RevGrowth[LastIndex]}% increase from the year prior.*\n"
+    Output += f"*{ticker} has averaged {AverageRevenueGrowth}% growth in revenue per year for the last {LastIndex} years.*"
     await ctx.send(Output)
 
 # /bank MAIN METHOD
@@ -959,7 +953,8 @@ async def SalaryMainMethod(ctx, PaperTradeDB, UserID, UserSeesOnly):
 
     UserJob = Result[0]
     UserSalary = Result[1]
-    UserPayments = round((UserSalary / 365) * 7, 2)
+    # 0.01916496 derives from 1461 days in a 4-year period with leap years, divided by 28 (7 days/week * 4 years)
+    UserPayments = round(UserSalary * 0.01916496, 2) # Weekly Payments
 
     String = SalaryString(UserID, UserJob, UserSalary, UserPayments)
     await ctx.send(String, ephemeral = UserSeesOnly)
