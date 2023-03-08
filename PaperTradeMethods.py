@@ -3,7 +3,7 @@
 
 import yfinance as yf
 import yahooquery as yq
-import numpy
+import numpy as np
 from bisect import bisect_left
 import random
 import interactions
@@ -16,14 +16,9 @@ import interactions.ext.files
 # region MISCELLANEOUS
 
 # Binary Search
-def BinarySearch(List, Value):
+def BinarySearch(List: list, Value: str):
     i = bisect_left(List, Value) # returns the index of the value searched
     return i != len(List) and List[i] == Value # returns True if found, False if not
-
-# Separate a message into words at every space
-def TSplitMessage(message):
-    words = message.content.split(" ")
-    return words
 
 # Generate news articles about an equity
 def TGetNews(ticker):
@@ -54,13 +49,13 @@ def TCalcRevenue(ticker):
             continue
 
         PreviousRev = Revenue[i - 1]
-        RevChange = round(((CurrentRev - PreviousRev) / PreviousRev) * 100, 2)
+        RevChange = round(((CurrentRev / PreviousRev) - 1) * 100, 2)
         RevGrowth.append(RevChange)
 
     TotalIndices = len(Year)
     LastIndex = TotalIndices - 1
 
-    AverageRevenueGrowth = round(numpy.sum(RevGrowth) / LastIndex, 2)
+    AverageRevenueGrowth = round(np.sum(RevGrowth) / LastIndex, 2)
 
     Output = f"Revenue for **{ticker}** in {Year[LastIndex]} was ${Revenue[LastIndex]:,.2f}.\n"
     Output += "-----------------------------------------------------------------------\n"
@@ -70,76 +65,48 @@ def TCalcRevenue(ticker):
 
 # Generate random job and salary for discord user
 def GiveJob():
-    Jobs = [
-        "Plumber",
-        "Traveling Circus Clown",
-        "Salesperson at CarMax",
-        "Social Media Influencer",
-        "Nurse",
-        "Lawyer",
-        "Carpenter",
-        "Fast-Food Employee",
-        "General Surgeon",
-        "Data Engineer",
-        "Software Developer",
-        "Financial Analyst",
-        "Commercial Pilot",
-        "Entrepreneur",
-        "Politician"
-    ]
-    Job = random.choice(Jobs)
-    if Job in ["Traveling Circus Clown", "Fast-Food Employee", "Salesperson at CarMax"]:
-        Salary = random.randint(41000, 64000)
-    elif Job in ["Plumber", "Carpenter", "Nurse"]:
-        Salary = random.randint(52000, 88000)
-    elif Job in ["Social Media Influencer", "Entrepreneur"]:
-        Salary = random.randint(44000, 180000)
-    elif Job in ["Lawyer", "Data Engineer", "Software Developer", "Financial Analyst"]:
-        Salary = random.randint(90000, 170000)
-    elif Job in ["General Surgeon", "Commercial Pilot"]:
-        Salary = random.randint(125000, 205000)
-    elif Job in ["Politician"]:
-        Salary = random.randint(115000, 150000)
+    Jobs = {
+        "Plumber": (52000, 88000),
+        "Traveling Circus Clown": (41000, 64000),
+        "Salesperson at CarMax": (41000, 64000),
+        "Social Media Influencer": (44000, 180000),
+        "Nurse": (52000, 88000),
+        "Lawyer": (90000, 170000),
+        "Carpenter": (52000, 88000),
+        "Fast-Food Employee": (41000, 64000),
+        "General Surgeon": (125000, 205000),
+        "Data Engineer": (90000, 170000),
+        "Software Developer": (90000, 170000),
+        "Financial Analyst": (90000, 170000),
+        "Commercial Pilot": (125000, 205000),
+        "Entrepreneur": (44000, 180000),
+        "Politician": (115000, 150000)
+    }
+    Job = random.choice(Jobs.keys())
+    SalaryRange = Jobs[Job]
+    Salary = random.randint(SalaryRange[0], SalaryRange[1])
     return Job, Salary
 
 # Retrieve the ID for the Role of the user's job in the discord server
 def GetRoleID(Job):
-    Jobs = [
-        "Plumber",
-        "Traveling Circus Clown",
-        "Salesperson at CarMax",
-        "Social Media Influencer",
-        "Nurse",
-        "Lawyer",
-        "Carpenter",
-        "Fast-Food Employee",
-        "General Surgeon",
-        "Data Engineer",
-        "Software Developer",
-        "Financial Analyst",
-        "Commercial Pilot",
-        "Entrepreneur",
-        "Politician"
-    ]
-    RoleIDs = [
-        1076732217994264717,
-        1076732406553399336,
-        1076732453714141194,
-        1076732485238521896,
-        1076732506625277992,
-        1076732533976338486,
-        1076732549801443338,
-        1076732568621305877,
-        1076732584727429180,
-        1076732604432265298,
-        1076732621452746852,
-        1076732640910131220,
-        1076732667929821234,
-        1076732685449441341,
-        1076732702235033660
-    ]
-    RoleID = RoleIDs[Jobs.index(Job)]
-    return RoleID
+    RoleIDs = {
+        "Plumber": 1076732217994264717,
+        "Traveling Circus Clown": 1076732406553399336,
+        "Salesperson at CarMax": 1076732453714141194,
+        "Social Media Influencer": 1076732485238521896,
+        "Nurse": 1076732506625277992,
+        "Lawyer": 1076732533976338486,
+        "Carpenter": 1076732549801443338,
+        "Fast-Food Employee": 1076732568621305877,
+        "General Surgeon": 1076732584727429180,
+        "Data Engineer": 1076732604432265298,
+        "Software Developer": 1076732621452746852,
+        "Financial Analyst": 1076732640910131220,
+        "Commercial Pilot": 1076732667929821234,
+        "Entrepreneur": 1076732685449441341,
+        "Politician": 1076732702235033660
+    }
+    return RoleIDs[Job]
 
 # endregion MISCELLANEOUS
 # ------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -148,7 +115,7 @@ def GetRoleID(Job):
 # region STRINGS AND EMBEDS GENERATED
 
 # /help generate embed
-def HelpEmbed(Gold):
+def HelpEmbed(Gold: bool):
     ImageFile1 = interactions.File(filename = "Images/OriginalLogoInvestantTHIN.png")
     ImageFile2 = interactions.File(filename = "Images/FaviconOriginal.png")
     ImageFile3 = interactions.File(filename = "Images/FaviconTransparent.png")
@@ -157,16 +124,16 @@ def HelpEmbed(Gold):
         embed = interactions.Embed(title = "**Investant | A Paper Money Platform**", description = "We're Building The Most Advanced Market-Based Paper Economy On Discord", color = 0xEBA773)
         ImageFile4 = interactions.File(filename = "Images/FaviconGOLD.png")
         files = [ImageFile1, ImageFile2, ImageFile3, ImageFile4]
-        embed.set_author(name = "PaperTrade", url = "https://discord.gg/YbU4eQ78", icon_url = "attachment://FaviconGOLD.png")
+        embed.set_author(name = "PaperTrade", url = "https://discord.gg/SFUKKjWEjH", icon_url = "attachment://FaviconGOLD.png")
     else:
         embed = interactions.Embed(title = "**Investant | A Paper Money Platform**", description = "We're Building The Most Advanced Market-Based Paper Economy On Discord", color = 0x40C9FF)
         ImageFile4 = interactions.File(filename = "Images/FaviconWHITE.png")
         files = [ImageFile1, ImageFile2, ImageFile3, ImageFile4]
-        embed.set_author(name = "PaperTrade", url = "https://discord.gg/YbU4eQ78", icon_url = "attachment://FaviconWHITE.png")
+        embed.set_author(name = "PaperTrade", url = "https://discord.gg/SFUKKjWEjH", icon_url = "attachment://FaviconWHITE.png")
 
     embed.set_thumbnail(url = "attachment://FaviconTransparent.png", width = 50, height = 50)
     embed.set_image(url = "attachment://OriginalLogoInvestantTHIN.png")
-    embed.set_footer(text = "Investant", icon_url = "attachment://FaviconOriginal.png")
+    embed.set_footer(text = "Investant | A Paper Money Platform", icon_url = "attachment://FaviconOriginal.png")
 
     embed.add_field(name = "**/portfolio**", value = "Your Current Portfolio", inline = True)
     embed.add_field(name = "**/buy**", value = "Buy an Equity [itmm]", inline = True)
@@ -209,53 +176,60 @@ def GenerateITMMEmbed(Positions, ITMMCashBalance, ITMMCashProceeds, NumUsersInve
     ImageFile3 = interactions.File(filename = "Images/FaviconTransparent.png")
     if Gold:
         embed = interactions.Embed(
-            title = "Investant Total Money Market Fund",
+            title = "Investant | Total Money Market Fund",
             description = "The Investant Total Money Market Fund is a Hedge Fund Internally Managed by InvestantMax Users. Ability to Invest in the Fund Coming Soon.",
             color = 0xEBA773
         )
         ImageFile4 = interactions.File(filename = "Images/FaviconGOLD.png")
         files = [ImageFile1, ImageFile2, ImageFile3, ImageFile4]
-        embed.set_author(name = "PaperTrade", url = "https://discord.gg/YbU4eQ78", icon_url = "attachment://FaviconGOLD.png")
+        embed.set_author(name = "PaperTrade", url = "https://discord.gg/SFUKKjWEjH", icon_url = "attachment://FaviconGOLD.png")
     else:
         embed = interactions.Embed(
-            title = "Investant Total Money Market Fund",
+            title = "Investant | Total Money Market Fund",
             description = "The Investant Total Money Market Fund is a Hedge Fund Internally Managed by InvestantMax Users. Ability to Invest in the Fund Coming Soon.",
             color = 0x40C9FF
         )
         ImageFile4 = interactions.File(filename = "Images/FaviconWHITE.png")
         files = [ImageFile1, ImageFile2, ImageFile3, ImageFile4]
-        embed.set_author(name = "PaperTrade", url = "https://discord.gg/YbU4eQ78", icon_url = "attachment://FaviconWHITE.png")
+        embed.set_author(name = "PaperTrade", url = "https://discord.gg/SFUKKjWEjH", icon_url = "attachment://FaviconWHITE.png")
     embed.set_thumbnail(url = "attachment://FaviconTransparent.png", width = 50, height = 50)
     embed.set_image(url = "attachment://OriginalLogoInvestantTHIN.png")
     embed.set_footer(text = f"Investant | {NumUsersInvested} Users Invested in the ITMM", icon_url = "attachment://FaviconOriginal.png")
+
+    FieldsToEmbed = [] # Prepare list for additional fields to embed
+
+    # Fetch Data from Yahoo Finance API
+    symbols = [position[3] for position in Positions]
+    data = yf.download(symbols, period='1d', interval="1d", group_by='ticker', progress=False)
 
     # Calculate Outstanding Investments of Fund
     ITMMTotalMarketValue = 0
     ITMMUnrealizedGain = 0
     for position in Positions:
+        symbol = position[3]
         quantity = position[4]
         AvgCost = position[5]
-        equity = yf.Ticker(position[3])
-        price = equity.history().tail(1)['Close'][0]
+        TotalCost = position[6]
+        price = data[symbol].iloc[-1]['Close']
         ITMMTotalMarketValue += (quantity * price)
         ITMMUnrealizedGain += ((price - AvgCost) * quantity)
+
+        PositionEmbedField = {
+            "name": f"{symbol}",
+            "value": f"P/L: {(((price * quantity) - TotalCost) / TotalCost) * 100:,.2f}%\n# Shares: {quantity}\nCurrent Value: ${price * quantity:,.2f}\nCurrent Price: ${price:,.2f}\nAvg Cost: ${AvgCost:,.2f}"
+        }
+        FieldsToEmbed.append(PositionEmbedField)
 
     # ADD ITMM FUND INFORMATION
     embed.add_field(
         name = f"TOTAL VALUE: ${ITMMCashBalance + ITMMTotalMarketValue:,.2f} | Return: {(ITMMUnrealizedGain / ITMMTotalMarketValue) * 100:,.2f}%",
         value = f"Cash: ${ITMMCashBalance:,.2f}\nInvestments: ${ITMMTotalMarketValue:,.2f}\nTotal Proceeds: ${ITMMCashProceeds:,.2f}"
     )
-    for position in Positions:
-        name = position[3]
-        quantity = position[4]
-        AvgCost = position[5]
-        TotalCost = position[6]
-        equity = yf.Ticker(name)
-        price = equity.history().tail(1)['Close'][0]
-
+    # ADD INDIVIDUAL POSITION(S) INFORMATION
+    for Field in FieldsToEmbed:
         embed.add_field(
-            name = f"{name}",
-            value = f"P/L: {(((price * quantity) - TotalCost) / TotalCost) * 100:,.2f}%\n# Shares: {quantity}\nCurrent Value: ${price * quantity:,.2f}\nCurrent Price: ${price:,.2f}\nAvg Cost: ${AvgCost:,.2f}"
+            name = Field["name"],
+            value = Field["value"]
         )
     # RETURN EMBED AND FILES
     return embed, files
@@ -274,7 +248,7 @@ def GeneratePortfolioEmbed(Positions, UserCashBalance, UserCashProceeds, UserChe
         )
         ImageFile4 = interactions.File(filename = "Images/FaviconGOLD.png")
         files = [ImageFile1, ImageFile2, ImageFile3, ImageFile4]
-        embed.set_author(name = "PaperTrade", url = "https://discord.gg/YbU4eQ78", icon_url = "attachment://FaviconGOLD.png")
+        embed.set_author(name = "PaperTrade", url = "https://discord.gg/SFUKKjWEjH", icon_url = "attachment://FaviconGOLD.png")
     else:
         embed = interactions.Embed(
             title = "Investant | Individual Brokerage Account",
@@ -283,52 +257,84 @@ def GeneratePortfolioEmbed(Positions, UserCashBalance, UserCashProceeds, UserChe
         )
         ImageFile4 = interactions.File(filename = "Images/FaviconWHITE.png")
         files = [ImageFile1, ImageFile2, ImageFile3, ImageFile4]
-        embed.set_author(name = "PaperTrade", url = "https://discord.gg/YbU4eQ78", icon_url = "attachment://FaviconWHITE.png")
+        embed.set_author(name = "PaperTrade", url = "https://discord.gg/SFUKKjWEjH", icon_url = "attachment://FaviconWHITE.png")
     embed.set_thumbnail(url = "attachment://FaviconTransparent.png", width = 50, height = 50)
     embed.set_image(url = "attachment://OriginalLogoInvestantTHIN.png")
     embed.set_footer(text = f"Investant | A Paper Money Platform", icon_url = "attachment://FaviconOriginal.png")
+
+    FieldsToEmbed = [] # Prepare list for additional fields to embed
+
+    # Fetch Data from Yahoo Finance API
+    symbols = [position[2] for position in Positions]
+    data = yf.download(symbols, period='1d', interval="1d", group_by='ticker', progress=False)
 
     # Calculate Outstanding Investments
     TotalMarketValue = 0
     UnrealizedGain = 0
     for position in Positions:
+        symbol = position[2]
         quantity = position[3]
         AvgCost = position[4]
-        equity = yf.Ticker(position[2])
-        price = equity.history().tail(1)['Close'][0]
+        TotalCost = position[5]
+        price = data[symbol].iloc[-1]['Close']
         TotalMarketValue += (quantity * price)
         UnrealizedGain += ((price - AvgCost) * quantity)
+
+        PositionEmbedField = {
+            "name": f"{symbol}",
+            "value": f"P/L: {(((price * quantity) - TotalCost) / TotalCost) * 100:,.2f}%\n# Shares: {quantity}\nCurrent Value: ${price * quantity:,.2f}\nCurrent Price: ${price:,.2f}\nAvg Cost: ${AvgCost:,.2f}"
+        }
+        FieldsToEmbed.append(PositionEmbedField)
 
     # ADD MARKET INFORMATION
     embed.add_field(
         name = f"TOTAL VALUE: ${UserCashBalance + TotalMarketValue:,.2f} | Return: {(UnrealizedGain / TotalMarketValue) * 100:,.2f}%",
         value = f"Cash: ${UserCashBalance:,.2f}\nInvestments: ${TotalMarketValue:,.2f}\nTotal Proceeds: ${UserCashProceeds:,.2f}"
     )
-    for position in Positions:
-        name = position[2]
-        quantity = position[3]
-        AvgCost = position[4]
-        TotalCost = position[5]
-        equity = yf.Ticker(name)
-        price = equity.history().tail(1)['Close'][0]
-
+    # ADD INDIVIDUAL POSITION(S) INFORMATION
+    for Field in FieldsToEmbed:
         embed.add_field(
-            name = f"{name}",
-            value = f"P/L: {(((price * quantity) - TotalCost) / TotalCost) * 100:,.2f}%\n# Shares: {quantity}\nCurrent Value: ${price * quantity:,.2f}\nCurrent Price: ${price:,.2f}\nAvg Cost: ${AvgCost:,.2f}"
+            name = Field["name"],
+            value = Field["value"]
         )
-    
     # ADD BANKING INFORMATION
     embed.add_field(
         name = "Bank Accounts",
         value = f"Checking: ${UserChecking:,.2f}\nSavings: ${UserSavings:,.2f}"
     )
-
     # TOTAL NET WORTH
     embed.add_field(
         name = f"TOTAL NET WORTH: ${UserCashBalance + TotalMarketValue + UserChecking + UserSavings:,.2f}",
         value = ""
     )
+    # RETURN EMBED AND FILES
+    return embed, files
 
+# Create Salary Payout Embedded Message for weekly salary payouts
+def GenerateSalaryPayoutEmbed(NumEmployees, TotalPayout):
+    # PREPARE EMBED FOR ADDING SALARY PAYOUT INFORMATION
+    ImageFile1 = interactions.File(filename = "Images/OriginalLogoInvestantTHIN.png")
+    ImageFile2 = interactions.File(filename = "Images/FaviconOriginal.png")
+    ImageFile3 = interactions.File(filename = "Images/FaviconTransparent.png")
+    ImageFile4 = interactions.File(filename = "Images/FaviconWHITE.png")
+    files = [ImageFile1, ImageFile2, ImageFile3, ImageFile4]
+    embed = interactions.Embed(
+        title = "Investant | PAYDAY ANNOUNCEMENT",
+        description = "Salaries Have Been Processed | Check Your New Account Balances With /bank Or /portfolio",
+        color = 0x40C9FF
+    )
+
+    # SETUP BASE STRUCTURE OF EMBED
+    embed.set_author(name = "PaperTrade", url = "https://discord.gg/SFUKKjWEjH", icon_url = "attachment://FaviconWHITE.png")
+    embed.set_thumbnail(url = "attachment://FaviconTransparent.png", width = 50, height = 50)
+    embed.set_image(url = "attachment://OriginalLogoInvestantTHIN.png")
+    embed.set_footer(text = f"Investant | A Paper Money Platform", icon_url = "attachment://FaviconOriginal.png")
+
+    # RELAY WEEKLY PAYOUT INFO
+    embed.add_field(
+    name = f"TOTAL PAYOUT: ${TotalPayout:,.2f}",
+    value = f"TOTAL EMPLOYEES PAID: {NumEmployees}"
+    )
     # RETURN EMBED AND FILES
     return embed, files
 
@@ -355,7 +361,7 @@ async def IsMemberInGuild(ctx, UserID, InvestantServerID, PaperTradeBot):
         if member.id == UserID:
             return True
     await ctx.send(f"I'm sorry, I don't seem to recall knowing you... Feel free to join!")
-    await ctx.send("https://discord.gg/uE7HhjhM")
+    await ctx.send("https://discord.gg/SFUKKjWEjH")
     return False
 
 # ITMM BUY TRANSACTION STRING
@@ -395,11 +401,8 @@ async def ValidateAllUsers(PaperTradeBot, InvestantServerID, PaperTradeDB, JobAs
     DBCursor = PaperTradeDB.cursor() # Open Cursor
     DBCursor.execute("SELECT DISTINCT UserID FROM DiscordUserInfo ORDER BY UserID")
     Result = DBCursor.fetchall()
-    AllListedUsers = []
+    AllListedUsers = [user[0] for user in Result]
     NewUsers = 0
-
-    for user in Result:
-        AllListedUsers.append(user[0])
 
     for member in AllMembers:
 
@@ -407,7 +410,7 @@ async def ValidateAllUsers(PaperTradeBot, InvestantServerID, PaperTradeDB, JobAs
             continue
 
         UserID = str(member.id)
-        if BinarySearch(AllListedUsers, UserID): # Returns true if found
+        if BinarySearch(List = AllListedUsers, Value = UserID): # Returns true if found
             continue
 
         else:
@@ -451,16 +454,16 @@ def PayoutSalaries(PaperTradeDB):
     NumEmployees = len(MemberSelection)
     TotalPayout = 0
 
-    
     for member in MemberSelection: # Process salary payments to user accounts
-        UserID = member[0]
-        UserSalary = member[1]
+        UserID, UserSalary = member[0], member[1]
+
         # We need to know their checking balance as well
         DBCursor.execute("SELECT Checking FROM BankingAccounts WHERE UserID = %s", [UserID])
         UserCheckingBalance = DBCursor.fetchone()[0]
 
         # Calculate payment and new checking balance
-        Payment = round((UserSalary / 365) * 7, 2)
+        # 0.01916496 derives from 1461 days in a 4-year period with leap years, divided by 28 (7 days/week * 4 years)
+        Payment = round(UserSalary * 0.01916496, 2)
         TotalPayout += Payment
         NewCheckingBalance = round(UserCheckingBalance + Payment, 2)
 
@@ -471,16 +474,8 @@ def PayoutSalaries(PaperTradeDB):
     PaperTradeDB.commit()
     DBCursor.close() # Close Cursor
 
-    SalaryAnnouncement = "-----------------------------------------------------------------------\n"
-    SalaryAnnouncement += "**PAYDAY ANNOUNCEMENT**\n"
-    SalaryAnnouncement += "-----------------------------------------------------------------------\n"
-    SalaryAnnouncement += "**Salaries Processed**\n"
-    SalaryAnnouncement += f"Total Employees Paid: {NumEmployees}\n"
-    SalaryAnnouncement += f"Total Payout: ${TotalPayout:,.2f}\n"
-    SalaryAnnouncement += "-----------------------------------------------------------------------\n"
-    SalaryAnnouncement += "*Check your new account balances with /bank or /portfolio*\n"
-    SalaryAnnouncement += "-----------------------------------------------------------------------"
-    return SalaryAnnouncement
+    embed, files = GenerateSalaryPayoutEmbed(NumEmployees, TotalPayout)
+    return embed, files
 
 # Handle new entrant to the Investant server
 async def NewMemberJoined(member, PaperTradeDB, PaperTradeBot, PaperTrade, JobAssignment):
@@ -648,7 +643,7 @@ async def BuyMainMethod(ctx, PaperTradeBot, UserSeesOnly, PaperTradeDB, GuildMem
 
         # Send message to PaperTrade channel and Cash Flow channel
         await ctx.send(f"<@{UserID}> bought {quantity} shares of {ticker} for ${cost:,.2f} at ${price:,.2f} per share")
-        await CashFlowChannel.send(f"<@{UserID}> just bought {quantity} shares of {ticker} for ${cost:,.2f}")
+        await CashFlowChannel.send(f"**{GuildMember.name}** just bought {quantity} shares of {ticker} for ${cost:,.2f}")
         return
     
     # This is a transaction for the Investant Total Money Market Fund
@@ -806,7 +801,7 @@ async def SellMainMethod(ctx, PaperTradeBot, PaperTradeDB, UserID, InvestantServ
 
             if quantity > CurrentQuantity: # If user is attempting to sell more than they own, return error
                 DBCursor.close() # Close Cursor
-                await ctx.send(f"Insufficient Share Volume. Portfolio contains {CurrentQuantity} shares of {ticker}.", ephemeral = True)
+                await ctx.send(f"Insufficient Share Volume. Your portfolio contains {CurrentQuantity} shares of {ticker}.", ephemeral = True)
                 return
             
             # Sell transaction will execute, so prepare CashFlowChannel and required criteria
@@ -848,7 +843,7 @@ async def SellMainMethod(ctx, PaperTradeBot, PaperTradeDB, UserID, InvestantServ
 
             # Send message to PaperTrade channel and Cash Flow channel
             await ctx.send(f"<@{UserID}> sold {quantity} shares of {ticker} for ${proceeds:,.2f} at ${price:,.2f} per share")
-            await CashFlowChannel.send(f"<@{UserID}> just sold {quantity} shares of {ticker} for ${proceeds:,.2f}")
+            await CashFlowChannel.send(f"**{ctx.author.name}** just sold {quantity} shares of {ticker} for ${proceeds:,.2f}")
             return
         
         else: # User attempted to sell an equity that they don't own
@@ -1013,7 +1008,7 @@ async def TransferMainMethod(ctx, withdraw, deposit, amount, UserID, PaperTradeD
 
                     # Send message transaction processed
                     await ctx.send(f"Hey, <@{UserID}>! We've received your request to transfer ${TransferAmount:,.2f}. Your Portfolio Cash Balance is now ${NewCashBalance:,.2f} and your Checking Balance is now ${NewCheckingBalance:,.2f}.", ephemeral = UserSeesOnly)
-                    await CashFlowChannel.send(f"<@{UserID}> just withdrew ${TransferAmount:,.2f} from their portfolio")
+                    await CashFlowChannel.send(f"**{ctx.author.name}** just withdrew ${TransferAmount:,.2f} from their portfolio")
                     return
                 
                 case "savings": # Depositing to savings
@@ -1035,7 +1030,7 @@ async def TransferMainMethod(ctx, withdraw, deposit, amount, UserID, PaperTradeD
 
                     # Send message transaction processed
                     await ctx.send(f"Hey, <@{UserID}>! We've received your request to transfer ${TransferAmount:,.2f}. Your Portfolio Cash Balance is now ${NewCashBalance:,.2f} and your Savings Balance is now ${NewSavingsBalance:,.2f}.", ephemeral = UserSeesOnly)
-                    await CashFlowChannel.send(f"<@{UserID}> just withdrew ${TransferAmount:,.2f} from their portfolio")
+                    await CashFlowChannel.send(f"**{ctx.author.name}** just withdrew ${TransferAmount:,.2f} from their portfolio")
                     return
         
         case "checking": # Withdrawing from checking
@@ -1068,7 +1063,7 @@ async def TransferMainMethod(ctx, withdraw, deposit, amount, UserID, PaperTradeD
 
                     # Send message transaction processed
                     await ctx.send(f"Hey, <@{UserID}>! We've received your request to transfer ${TransferAmount:,.2f}. Your Portfolio Cash Balance is now ${NewCashBalance:,.2f} and your Checking Balance is now ${NewCheckingBalance:,.2f}.", ephemeral = UserSeesOnly)
-                    await CashFlowChannel.send(f"<@{UserID}> just deposited ${TransferAmount:,.2f} to their portfolio")
+                    await CashFlowChannel.send(f"**{ctx.author.name}** just deposited ${TransferAmount:,.2f} to their portfolio")
                     return
 
                 case "savings": # Depositing to savings
@@ -1120,7 +1115,7 @@ async def TransferMainMethod(ctx, withdraw, deposit, amount, UserID, PaperTradeD
 
                     # Send message transaction processed
                     await ctx.send(f"Hey, <@{UserID}>! We've received your request to transfer ${TransferAmount:,.2f}. Your Portfolio Cash Balance is now ${NewCashBalance:,.2f} and your Savings Balance is now ${NewSavingsBalance:,.2f}.", ephemeral = UserSeesOnly)
-                    await CashFlowChannel.send(f"<@{UserID}> just deposited ${TransferAmount:,.2f} to their portfolio")
+                    await CashFlowChannel.send(f"**{ctx.author.name}** just deposited ${TransferAmount:,.2f} to their portfolio")
                     return
 
                 case "checking": # Depositing to checking
