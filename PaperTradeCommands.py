@@ -63,7 +63,7 @@ async def MainPortfolioMethod(ctx, PaperTradeDB, UserID, UserSeesOnly, Gold: boo
     return
 
 # /buy MAIN METHOD
-async def BuyMainMethod(ctx, PaperTradeBot, UserSeesOnly, PaperTradeDB, GuildMember, UserID, InvestantServerID, CashFlow, InvestantTotalMoneyMarketFund, PaperTrade, PaperTradeGold, quantity, ticker, itmm):
+async def BuyMainMethod(ctx, PaperTradeBot, UserSeesOnly, PaperTradeDB, GuildMember, UserID, InvestantServerID, CashFlow, InvestantTotalMoneyMarketFund, PaperTrade, quantity, ticker, itmm):
     # Require variables: what stock, what price
     ticker = ticker.upper()
     stock = yf.Ticker(ticker)
@@ -80,7 +80,7 @@ async def BuyMainMethod(ctx, PaperTradeBot, UserSeesOnly, PaperTradeDB, GuildMem
     if not itmm:
         # Make sure they didn't send in ITMM Channel
         if ctx.channel.id == InvestantTotalMoneyMarketFund:
-            await ctx.send(f"This command is restricted to <#{PaperTrade}> and <#{PaperTradeGold}>.", ephemeral = UserSeesOnly)
+            await ctx.send(f"This command is restricted to <#{PaperTrade}>.", ephemeral = UserSeesOnly)
             return
 
         # Check if user already has [20] securities in their portfolio
@@ -205,7 +205,7 @@ async def BuyMainMethod(ctx, PaperTradeBot, UserSeesOnly, PaperTradeDB, GuildMem
         return
 
 # /sell MAIN METHOD
-async def SellMainMethod(ctx, PaperTradeBot, PaperTradeDB, UserID, InvestantServerID, InvestantTotalMoneyMarketFund, CashFlow, UserDMChannel, PaperTrade, PaperTradeGold, quantity, ticker, itmm):
+async def SellMainMethod(ctx, PaperTradeBot, PaperTradeDB, UserID, InvestantServerID, InvestantTotalMoneyMarketFund, CashFlow, UserDMChannel, PaperTrade, quantity, ticker, itmm):
     
     if itmm: # THIS IS FOR THE ITMM FUND
         if ctx.channel_id != InvestantTotalMoneyMarketFund:
@@ -279,8 +279,8 @@ async def SellMainMethod(ctx, PaperTradeBot, PaperTradeDB, UserID, InvestantServ
     else: # MAIN PERSONAL HOLDING SELL PROCESS
 
         # WRONG CHANNEL
-        if ctx.channel_id not in [PaperTrade, PaperTradeGold, UserDMChannel.id]:
-            await ctx.send(f"This command is restricted to <#{PaperTrade}> and <#{PaperTradeGold}>.", ephemeral =True)
+        if ctx.channel_id not in [PaperTrade, UserDMChannel.id]:
+            await ctx.send(f"This command is restricted to <#{PaperTrade}>.", ephemeral =True)
             return
 
         # Check if user already owns this equity
@@ -357,9 +357,11 @@ async def PriceMainMethod(ctx, ticker):
 async def NewsMainMethod(ctx, GuildMember, ticker, DirectMessage):
     ticker = ticker.upper() # Make the ticker uppercase
     TickerNews = TGetNews(ticker)
-    await ctx.user.send(TickerNews)
     if DirectMessage:
+        await ctx.send(f"Here's some news about **{ticker}**!")
+        await ctx.user.send(TickerNews)
         return
+    await ctx.user.send(TickerNews)
     await ctx.send(f"Hey, <@{GuildMember.user.id}>, I sent you some news about **{ticker}**.")
     return
 
