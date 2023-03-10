@@ -92,7 +92,7 @@ async def PayoutSalaries(PaperTradeDB: mysql.connector.MySQLConnection):
         DBCursor.execute("UPDATE BankingAccounts SET Checking = %s WHERE UserID = %s", (NewCheckingBalance, UserID))
     
     # Commite these changes to the database
-    await PaperTradeDB.commit()
+    PaperTradeDB.commit()
     DBCursor.close() # Close Cursor
 
     embed, files = GenerateSalaryPayoutEmbed(NumEmployees, TotalPayout)
@@ -146,7 +146,7 @@ async def PayoutSavingsInterest(PaperTradeDB: mysql.connector.MySQLConnection, A
         TotalAccruedInterest += InterestPayment
 
     # Commit these changes and close the cursor
-    await PaperTradeDB.commit()
+    PaperTradeDB.commit()
     DBCursor.close() # Close Cursor
 
     # Generate the embed and files to send to General Channel
