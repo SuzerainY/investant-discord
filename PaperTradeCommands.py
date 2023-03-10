@@ -2,6 +2,7 @@
 # region IMPORTS
 
 from PaperTradeEmbeds import *
+import mysql.connector
 import yfinance as yf
 import yahooquery as yq
 import numpy as np
@@ -21,7 +22,7 @@ def BinarySearch(List: list, Value: str):
     return i != len(List) and List[i] == Value # returns True if found, False if not
 
 # Generate news articles about an equity
-def TGetNews(ticker):
+def TGetNews(ticker: str):
     stock = yf.Ticker(ticker)
     TickerNews = f"**{ticker} News:**\n\n"
     for Article in stock.news:
@@ -35,22 +36,22 @@ def TGetNews(ticker):
 # region MAIN COMMAND METHODS CONSOLIDATED
 
 # /portfolio MAIN METHOD
-async def MainPortfolioMethod(ctx, PaperTradeDB, UserID, UserSeesOnly, Gold: bool):
+async def MainPortfolioMethod(ctx: interactions.CommandContext, PaperTradeDB: mysql.connector.MySQLConnection, UserID: int, UserSeesOnly: bool, Gold: bool):
+    # Fetch UserID
+    UserID = str(UserID)
+
     # Grab User's cash balance
     DBCursor = PaperTradeDB.cursor() # Open Cursor
-    DBCursor.execute("SELECT TotalCost FROM PortfolioHoldings WHERE UserID = %s AND Holding = %s", (str(UserID), "Cash Balance")) # Fetch User's Cash Balance
-    UserCashBalance = DBCursor.fetchone()[0]
-
-    # Grab User's total cash proceeds
-    DBCursor.execute("SELECT TotalCost FROM PortfolioHoldings WHERE UserID = %s AND Holding = %s", (str(UserID), "Cash Proceeds")) # Fetch User's Cash Proceeds
-    UserCashProceeds = DBCursor.fetchone()[0]
+    DBCursor.execute("SELECT TotalCost FROM PortfolioHoldings WHERE UserID = %s AND Holding IN ('Cash Balance', 'Cash Proceeds') ORDER BY Holding", [UserID])
+    Results = DBCursor.fetchall()
+    UserCashBalance, UserCashProceeds = Results[0][0], Results[1][0]
 
     # Grab User's portfolio positions other than cash
-    DBCursor.execute("SELECT * FROM PortfolioHoldings WHERE UserID = %s AND Holding != %s AND Holding != %s", (str(UserID), "Cash Balance", "Cash Proceeds"))
+    DBCursor.execute("SELECT * FROM PortfolioHoldings WHERE UserID = %s AND Holding != %s AND Holding != %s", (UserID, "Cash Balance", "Cash Proceeds"))
     Positions = DBCursor.fetchall()
 
     # Grab User's Banking positions
-    DBCursor.execute("SELECT Checking, Savings FROM BankingAccounts WHERE UserID = %s", [str(UserID)])
+    DBCursor.execute("SELECT Checking, Savings FROM BankingAccounts WHERE UserID = %s", [UserID])
     BankAccounts = DBCursor.fetchone()
     UserChecking = BankAccounts[0]
     UserSavings = BankAccounts[1]
@@ -63,7 +64,9 @@ async def MainPortfolioMethod(ctx, PaperTradeDB, UserID, UserSeesOnly, Gold: boo
     return
 
 # /buy MAIN METHOD
-async def BuyMainMethod(ctx, PaperTradeBot, UserSeesOnly, PaperTradeDB, GuildMember, UserID, InvestantServerID, CashFlow, InvestantTotalMoneyMarketFund, PaperTrade, quantity, ticker, itmm):
+async def BuyMainMethod(ctx: interactions.CommandContext, PaperTradeBot: interactions.Client, UserSeesOnly: bool, PaperTradeDB: mysql.connector.MySQLConnection, GuildMember: interactions.GuildMember, UserID: int, InvestantServerID: int, CashFlow: int,
+                        InvestantTotalMoneyMarketFund: int, PaperTrade: int, quantity: int, ticker: str, itmm: bool):
+    
     # Require variables: what stock, what price
     ticker = ticker.upper()
     stock = yf.Ticker(ticker)
@@ -205,7 +208,8 @@ async def BuyMainMethod(ctx, PaperTradeBot, UserSeesOnly, PaperTradeDB, GuildMem
         return
 
 # /sell MAIN METHOD
-async def SellMainMethod(ctx, PaperTradeBot, PaperTradeDB, UserID, InvestantServerID, InvestantTotalMoneyMarketFund, CashFlow, UserDMChannel, PaperTrade, quantity, ticker, itmm):
+async def SellMainMethod(ctx: interactions.CommandContext, PaperTradeBot: interactions.Client, PaperTradeDB: mysql.connector.MySQLConnection, UserID: int, InvestantServerID: int, InvestantTotalMoneyMarketFund: int, CashFlow: int,
+                         UserDMChannel: interactions.Channel, PaperTrade: int, quantity: int, ticker: str, itmm: bool):
     
     if itmm: # THIS IS FOR THE ITMM FUND
         if ctx.channel_id != InvestantTotalMoneyMarketFund:
@@ -337,7 +341,7 @@ async def SellMainMethod(ctx, PaperTradeBot, PaperTradeDB, UserID, InvestantServ
 
             # Send message to PaperTrade channel and Cash Flow channel
             await ctx.send(f"<@{UserID}> sold {quantity} shares of {ticker} for ${proceeds:,.2f} at ${price:,.2f} per share")
-            await CashFlowChannel.send(f"**{ctx.author.name}** just sold {quantity} shares of {ticker} for ${proceeds:,.2f}")
+            await CashFlowChannel.send(f"**{ctx.user.username}** just sold {quantity} shares of {ticker} for ${proceeds:,.2f}")
             return
         
         else: # User attempted to sell an equity that they don't own
@@ -346,7 +350,7 @@ async def SellMainMethod(ctx, PaperTradeBot, PaperTradeDB, UserID, InvestantServ
             return
 
 # /price MAIN METHOD
-async def PriceMainMethod(ctx, ticker):
+async def PriceMainMethod(ctx: interactions.CommandContext, ticker: str):
     ticker = ticker.upper() # Make the ticker uppercase
     equity = yf.Ticker(ticker)
     price = round(equity.history().tail(1)['Close'][0], 2)
@@ -354,7 +358,7 @@ async def PriceMainMethod(ctx, ticker):
     return
 
 # /news MAIN METHOD
-async def NewsMainMethod(ctx, GuildMember, ticker, DirectMessage):
+async def NewsMainMethod(ctx: interactions.CommandContext, GuildMember: interactions.GuildMember, ticker: str, DirectMessage: bool):
     ticker = ticker.upper() # Make the ticker uppercase
     TickerNews = TGetNews(ticker)
     if DirectMessage:
@@ -366,7 +370,7 @@ async def NewsMainMethod(ctx, GuildMember, ticker, DirectMessage):
     return
 
 # /revenue MAIN METHOD
-async def RevenueMainMethod(ctx, ticker):
+async def RevenueMainMethod(ctx: interactions.CommandContext, ticker: str):
     stock = yq.Ticker(ticker.upper())
     Data = stock.income_statement(frequency = 'a')
 
@@ -401,7 +405,7 @@ async def RevenueMainMethod(ctx, ticker):
     await ctx.send(Output)
 
 # /bank MAIN METHOD
-async def BankMainMethod(ctx, PaperTradeDB, UserID, UserSeesOnly):
+async def BankMainMethod(ctx: interactions.CommandContext, PaperTradeDB: mysql.connector.MySQLConnection, UserID: int, UserSeesOnly: bool):
     # Grab User's checking balance from BankingAccounts table
     DBCursor = PaperTradeDB.cursor() # Open Cursor
     DBCursor.execute("SELECT Checking, Savings FROM BankingAccounts WHERE UserID = %s", [str(UserID)])
@@ -413,7 +417,7 @@ async def BankMainMethod(ctx, PaperTradeDB, UserID, UserSeesOnly):
     await ctx.send(BankingString, ephemeral = UserSeesOnly)
 
 # /pay MAIN METHOD
-async def PayMainMethod(ctx, PaperTradeBot, PaperTradeDB, UserID, RecipientID, amount, CashFlow):
+async def PayMainMethod(ctx: interactions.CommandContext, PaperTradeBot: interactions.Client, PaperTradeDB: mysql.connector.MySQLConnection, UserID: int, RecipientID: int, amount: float, CashFlow: int):
     # Gather user credentials
     PayingUserID = UserID
     Amount = round(amount, 2)
@@ -450,7 +454,7 @@ async def PayMainMethod(ctx, PaperTradeBot, PaperTradeDB, UserID, RecipientID, a
     return
 
 # /itmm MAIN METHOD
-async def itmmMainMethod(ctx, PaperTradeDB, InvestantServerID, Gold: bool):
+async def itmmMainMethod(ctx: interactions.CommandContext, PaperTradeDB: mysql.connector.MySQLConnection, InvestantServerID: int, Gold: bool):
     # Grab ITMM Cash Balance
     DBCursor = PaperTradeDB.cursor() # Open Cursor
     DBCursor.execute("SELECT TotalCost FROM ServerPortfolios WHERE ServerID = %s AND PortfolioName = %s AND Holding = %s", (str(InvestantServerID), "Investant Total Money Market Fund", "Cash Balance"))
@@ -475,7 +479,7 @@ async def itmmMainMethod(ctx, PaperTradeDB, InvestantServerID, Gold: bool):
     return
 
 # /salary MAIN METHOD
-async def SalaryMainMethod(ctx, PaperTradeDB, UserID, UserSeesOnly):
+async def SalaryMainMethod(ctx: interactions.CommandContext, PaperTradeDB: mysql.connector.MySQLConnection, UserID: int, UserSeesOnly: bool):
     # Grab user's salary
     DBCursor = PaperTradeDB.cursor() # Open Cursor
     DBCursor.execute("SELECT Job, Salary FROM DiscordUserInfo WHERE UserID = %s", [str(UserID)])
@@ -492,7 +496,7 @@ async def SalaryMainMethod(ctx, PaperTradeDB, UserID, UserSeesOnly):
     return
 
 # /transfer MAIN METHOD
-async def TransferMainMethod(ctx, withdraw, deposit, amount, UserID, PaperTradeDB, PaperTradeBot, CashFlow, UserSeesOnly):
+async def TransferMainMethod(ctx: interactions.CommandContext, withdraw: str, deposit: str, amount: float, UserID: int, PaperTradeDB: mysql.connector.MySQLConnection, PaperTradeBot: interactions.Client, CashFlow: int, UserSeesOnly: bool):
     # Validate whether user entered duplicate account
     if withdraw == deposit:
         FailedTransferString = GenerateFailedTransferString(UserID)
@@ -534,7 +538,7 @@ async def TransferMainMethod(ctx, withdraw, deposit, amount, UserID, PaperTradeD
 
                     # Send message transaction processed
                     await ctx.send(f"Hey, <@{UserID}>! We've received your request to transfer ${TransferAmount:,.2f}. Your Portfolio Cash Balance is now ${NewCashBalance:,.2f} and your Checking Balance is now ${NewCheckingBalance:,.2f}.", ephemeral = UserSeesOnly)
-                    await CashFlowChannel.send(f"**{ctx.author.name}** just withdrew ${TransferAmount:,.2f} from their portfolio")
+                    await CashFlowChannel.send(f"**{ctx.user.username}** just withdrew ${TransferAmount:,.2f} from their portfolio")
                     return
                 
                 case "savings": # Depositing to savings
@@ -556,7 +560,7 @@ async def TransferMainMethod(ctx, withdraw, deposit, amount, UserID, PaperTradeD
 
                     # Send message transaction processed
                     await ctx.send(f"Hey, <@{UserID}>! We've received your request to transfer ${TransferAmount:,.2f}. Your Portfolio Cash Balance is now ${NewCashBalance:,.2f} and your Savings Balance is now ${NewSavingsBalance:,.2f}.", ephemeral = UserSeesOnly)
-                    await CashFlowChannel.send(f"**{ctx.author.name}** just withdrew ${TransferAmount:,.2f} from their portfolio")
+                    await CashFlowChannel.send(f"**{ctx.user.username}** just withdrew ${TransferAmount:,.2f} from their portfolio")
                     return
         
         case "checking": # Withdrawing from checking
@@ -589,7 +593,7 @@ async def TransferMainMethod(ctx, withdraw, deposit, amount, UserID, PaperTradeD
 
                     # Send message transaction processed
                     await ctx.send(f"Hey, <@{UserID}>! We've received your request to transfer ${TransferAmount:,.2f}. Your Portfolio Cash Balance is now ${NewCashBalance:,.2f} and your Checking Balance is now ${NewCheckingBalance:,.2f}.", ephemeral = UserSeesOnly)
-                    await CashFlowChannel.send(f"**{ctx.author.name}** just deposited ${TransferAmount:,.2f} to their portfolio")
+                    await CashFlowChannel.send(f"**{ctx.user.username}** just deposited ${TransferAmount:,.2f} to their portfolio")
                     return
 
                 case "savings": # Depositing to savings
@@ -641,7 +645,7 @@ async def TransferMainMethod(ctx, withdraw, deposit, amount, UserID, PaperTradeD
 
                     # Send message transaction processed
                     await ctx.send(f"Hey, <@{UserID}>! We've received your request to transfer ${TransferAmount:,.2f}. Your Portfolio Cash Balance is now ${NewCashBalance:,.2f} and your Savings Balance is now ${NewSavingsBalance:,.2f}.", ephemeral = UserSeesOnly)
-                    await CashFlowChannel.send(f"**{ctx.author.name}** just deposited ${TransferAmount:,.2f} to their portfolio")
+                    await CashFlowChannel.send(f"**{ctx.user.username}** just deposited ${TransferAmount:,.2f} to their portfolio")
                     return
 
                 case "checking": # Depositing to checking

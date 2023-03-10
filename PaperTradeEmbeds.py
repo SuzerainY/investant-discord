@@ -50,7 +50,7 @@ def HelpEmbed(Gold: bool):
     return embed, files
 
 # Create message for new members joining the discord server
-def NewMemberPrompt(member, Job, Salary, SignOnBonus, PaperTrade):
+def NewMemberPrompt(member: interactions.Member, Job: str, Salary: float, SignOnBonus: float, PaperTrade: int):
     prompt = f"**Hello, <@{member.id}>. Welcome to the Investant Community! We know it's your first day on the job, so let's go over things real quick...**\n\n"
     prompt += f"Congratulations on starting your new job as a **{Job}**! Your starting salary is **${Salary:,.2f}** and we have taken the liberty of providing you a sign-on bonus of **${SignOnBonus:,.2f}**.\n"
     prompt += f"The sign-on bonus has been wired to your brokerage account you provided us with. Access it with the **/portfolio** command in <#{PaperTrade}>.\n"
@@ -59,7 +59,7 @@ def NewMemberPrompt(member, Job, Salary, SignOnBonus, PaperTrade):
     return prompt
 
 # Create message for a returning member to the discord server
-def ReturningUserMessage(member, Job, UserCashTotal, UserChecking, UserSavings, PaperTrade):
+def ReturningUserMessage(member: interactions.Member, Job: str, UserCashTotal: float, UserChecking: float, UserSavings: float, PaperTrade: int):
     message = f"Long time no see, <@{member.id}>! Feel free to pick up where you left off as a {Job}...\n"
     message += f"You currently have ${UserCashTotal:,.2f} in your brokerage account that we've been keeping safe for you! Access it with the **/portfolio** command in <#{PaperTrade}>.\n"
     message += f"I also see that you have ${UserChecking:,.2f} in you checking account and ${UserSavings:,.2f} in your savings account. Access them with **/bank** or make transfers with **/transfer**."
@@ -67,7 +67,7 @@ def ReturningUserMessage(member, Job, UserCashTotal, UserChecking, UserSavings, 
     return message
 
 # Create ITMM Embedded Message for /itmm
-def GenerateITMMEmbed(Positions, ITMMCashBalance, ITMMCashProceeds, NumUsersInvested, Gold: bool):
+def GenerateITMMEmbed(Positions: list, ITMMCashBalance: float, ITMMCashProceeds: float, NumUsersInvested: int, Gold: bool):
     # PREPARE EMBED FOR ADDING ITMM FUND INFORMATION
     ImageFile1 = interactions.File(filename = "Images/OriginalLogoInvestantTHIN.png")
     ImageFile2 = interactions.File(filename = "Images/FaviconOriginal.png")
@@ -133,7 +133,7 @@ def GenerateITMMEmbed(Positions, ITMMCashBalance, ITMMCashProceeds, NumUsersInve
     return embed, files
 
 # Create Portfolio Embedded Message for /portfolio
-def GeneratePortfolioEmbed(Positions, UserCashBalance, UserCashProceeds, UserChecking, UserSavings, Gold: bool):
+def GeneratePortfolioEmbed(Positions: list, UserCashBalance: float, UserCashProceeds: float, UserChecking: float, UserSavings: float, Gold: bool):
     # PREPARE EMBED FOR ADDING ITMM FUND INFORMATION
     ImageFile1 = interactions.File(filename = "Images/OriginalLogoInvestantTHIN.png")
     ImageFile2 = interactions.File(filename = "Images/FaviconOriginal.png")
@@ -209,7 +209,7 @@ def GeneratePortfolioEmbed(Positions, UserCashBalance, UserCashProceeds, UserChe
     return embed, files
 
 # Create Salary Payout Embedded Message for weekly salary payouts
-def GenerateSalaryPayoutEmbed(NumEmployees, TotalPayout):
+def GenerateSalaryPayoutEmbed(NumEmployees: int, TotalPayout: float):
     # PREPARE EMBED FOR ADDING SALARY PAYOUT INFORMATION
     ImageFile1 = interactions.File(filename = "Images/OriginalLogoInvestantTHIN.png")
     ImageFile2 = interactions.File(filename = "Images/FaviconOriginal.png")
@@ -237,14 +237,14 @@ def GenerateSalaryPayoutEmbed(NumEmployees, TotalPayout):
     return embed, files
 
 # Create BankingString for /bank
-def GenerateBankingString(UserID, UserChecking, UserSavings):
+def GenerateBankingString(UserID: int, UserChecking: float, UserSavings: float):
     BankingString = f"**Hi <@{UserID}>, please see your current banking information below:**\n\n"
     BankingString += f"Checking Balance: ${UserChecking:,.2f}\n"
     BankingString += f"Savings Balance: ${UserSavings:,.2f}"
     return BankingString
 
 # Create FailedTransferString for /transfer
-def GenerateFailedTransferString(UserID):
+def GenerateFailedTransferString(UserID: int):
     FailedTransferString = f"I'm sorry, <@{UserID}>. Please double-check your transfer parameters.\n"
     FailedTransferString += "The Withdraw and Deposit accounts cannot be the same account.\n"
     FailedTransferString += "'Account1' is the balance from which you would like to remove the funds.\n"
@@ -252,24 +252,50 @@ def GenerateFailedTransferString(UserID):
     return FailedTransferString
 
 # ITMM BUY TRANSACTION STRING
-def ITMMBuyString(UserID, quantity, ticker, cost, price, NewCashBalance):
+def ITMMBuyString(UserID: int, quantity: int, ticker: str, cost: float, price: float, NewCashBalance: float):
     String = "**Investant Total Money Market Fund**\n"
     String += f"<@{UserID}> has processed a **buy** order for {quantity} shares of {ticker} for ${cost:,.2f} at ${price:,.2f} per share.\n"
     String += f"The fund retains a current cash balance of ${NewCashBalance:,.2f}."
     return String
 
 # ITMM SELL TRANSACTION STRING
-def ITMMSellString(UserID, quantity, ticker, proceeds, price, NewCashBalance):
+def ITMMSellString(UserID: int, quantity: int, ticker: str, proceeds: float, price: float, NewCashBalance: float):
     String = "**Investant Total Money Market Fund**\n"
     String += f"<@{UserID}> has processed a **sell** order for {quantity} shares of {ticker} for ${proceeds:,.2f} at ${price:,.2f} per share.\n"
     String += f"The fund now holds a cash balance of ${NewCashBalance:,.2f}."
     return String
 
 # Generate /salary string
-def SalaryString(UserID, UserJob, UserSalary, UserPayments):
+def SalaryString(UserID: int, UserJob: str, UserSalary: float, UserPayments: float):
     String = f"Hey, <@{UserID}>. Your current annual salary as a **{UserJob}** is **${UserSalary:,.2f}**.\n"
     String += f"You will receive weekly payments of **${UserPayments:,.2f}** each Friday."
     return String
+
+# Generate Savings Interest Payments Embed
+def GenerateSavingsInterest(TotalAccruedInterest: float):
+    # PREPARE EMBED FOR ADDING ITMM FUND INFORMATION
+    ImageFile1 = interactions.File(filename = "Images/OriginalLogoInvestantTHIN.png")
+    ImageFile2 = interactions.File(filename = "Images/FaviconOriginal.png")
+    ImageFile3 = interactions.File(filename = "Images/FaviconTransparent.png")
+    ImageFile4 = interactions.File(filename = "Images/FaviconWHITE.png")
+    files = [ImageFile1, ImageFile2, ImageFile3, ImageFile4]
+    embed = interactions.Embed(
+        title = "Investant | Daily Interest Accrued",
+        description = "Daily Accrued Interest Has Been Released For Investant+, InvestantPro, and InvestantMax Users.",
+        color = 0x40C9FF
+    )
+    embed.set_author(name = "PaperTrade", url = "https://discord.gg/SFUKKjWEjH", icon_url = "attachment://FaviconWHITE.png")
+    embed.set_thumbnail(url = "attachment://FaviconTransparent.png", width = 50, height = 50)
+    embed.set_image(url = "attachment://OriginalLogoInvestantTHIN.png")
+    embed.set_footer(text = f"Investant | A Paper Money Platform", icon_url = "attachment://FaviconOriginal.png")
+
+    # ADD TOTAL INTEREST PAID OUT
+    embed.add_field(
+        name = f"TOTAL INTEREST PAID: {TotalAccruedInterest}",
+        value = ""
+    )
+    # RETURN EMBED AND FILES
+    return embed, files
 
 # endregion STRINGS AND EMBEDS
 # ------------------------------------------------------------------------------------------------------------------------------------------------------------

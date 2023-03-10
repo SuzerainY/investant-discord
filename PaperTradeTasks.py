@@ -1,8 +1,10 @@
 # ------------------------------------------------------------------------------------------------------------------------------------------------------------
 # region IMPORTS
 
+import mysql.connector
 from PaperTradeCommands import *
 from PaperTradeEmbeds import *
+from PaperTradeClasses import *
 import interactions
 import interactions.ext.files
 import random
@@ -14,11 +16,7 @@ import random
 # region MAINTENANCE TASKS
 
 # Validate all discord members on startup
-async def ValidateAllUsers(PaperTradeBot, InvestantServerID, PaperTradeDB, JobAssignment, PaperTrade):
-
-    # Retrieve all discord members from the discord
-    InvestantGuild = await interactions.get(PaperTradeBot, interactions.Guild, object_id = InvestantServerID)
-    AllMembers = await InvestantGuild.get_all_members()
+async def ValidateAllUsers(PaperTradeBot: interactions.Client, KeepingMembers: TrackingMembers, PaperTradeDB: mysql.connector.MySQLConnection, JobAssignment: int, PaperTrade: int):
 
     # Retrieve all discord members from the database
     DBCursor = PaperTradeDB.cursor() # Open Cursor
@@ -27,7 +25,7 @@ async def ValidateAllUsers(PaperTradeBot, InvestantServerID, PaperTradeDB, JobAs
     AllListedUsers = [user[0] for user in Result]
     NewUsers = 0
 
-    for member in AllMembers:
+    for member in KeepingMembers.AllMembers:
 
         if member.user.bot: # If this is a bot, skip
             continue
@@ -69,7 +67,7 @@ async def ValidateAllUsers(PaperTradeBot, InvestantServerID, PaperTradeDB, JobAs
     return NewUsers
 
 # Payout Salaries Event Method
-def PayoutSalaries(PaperTradeDB):
+async def PayoutSalaries(PaperTradeDB: mysql.connector.MySQLConnection):
     # Retrieve all discord members with jobs in the database
     DBCursor = PaperTradeDB.cursor() # Open Cursor
     DBCursor.execute("SELECT DISTINCT UserID, Salary FROM DiscordUserInfo")
@@ -94,15 +92,72 @@ def PayoutSalaries(PaperTradeDB):
         DBCursor.execute("UPDATE BankingAccounts SET Checking = %s WHERE UserID = %s", (NewCheckingBalance, UserID))
     
     # Commite these changes to the database
-    PaperTradeDB.commit()
+    await PaperTradeDB.commit()
     DBCursor.close() # Close Cursor
 
     embed, files = GenerateSalaryPayoutEmbed(NumEmployees, TotalPayout)
     return embed, files
 
+# Pay Daily Interest Accrual on Savings Accounts
+async def PayoutSavingsInterest(PaperTradeDB: mysql.connector.MySQLConnection, AllMembers: list[interactions.Member], InvestantPlus: int, InvestantPro: int, InvestantMax: int):
+    # Retrieve all Investant+, InvestantPro, and InvestantMax Users
+    PlusMembers, ProMembers, MaxMembers = [], [], []
+    for member in AllMembers:
+        Roles = member.roles
+        if InvestantPlus in Roles:
+            PlusMembers.append(member.id)
+        elif InvestantPro in Roles:
+            ProMembers.append(member.id)
+        elif InvestantMax in Roles:
+            MaxMembers.append(member.id)
+
+    # Keep Track of the Total Accrued Interest Paid
+    TotalAccruedInterest = 0
+    DBCursor = PaperTradeDB.cursor() # Open Cursor
+
+    # For each Plus User, we need to calculate their accrued interest and make the payment
+    PlusMembers = ','.join(str(user) for user in PlusMembers)
+    DBCursor.execute(f"SELECT UserID, Savings FROM BankingAccounts WHERE UserID IN ({PlusMembers})")
+    Result = DBCursor.fetchall()
+    for UserID, Savings in Result:
+        InterestPayment = round(Savings * 0.00008889427, 2) # Computed by taking 3.3% annual to a 4-year rate (y = (1 + 0.033)**4 - 1) then converting to a daily rate including leap years ((1 + y)**(1/1461) - 1)
+        NewSavings = Savings + InterestPayment
+        DBCursor.execute("UPDATE BankingAccounts SET Savings = %s WHERE UserID = %s", (NewSavings, UserID))
+        TotalAccruedInterest += InterestPayment
+    
+    # For each Pro User, we need to calculate their accrued interest and make the payment
+    ProMembers = ','.join(str(user) for user in ProMembers)
+    DBCursor.execute(f"SELECT UserID, Savings FROM BankingAccounts WHERE UserID IN ({ProMembers})")
+    Result = DBCursor.fetchall()
+    for UserID, Savings in Result:
+        InterestPayment = round(Savings * 0.00010211551, 2) # Computed by taking 3.8% annual to a 4-year rate (y = (1 + 0.038)**4 - 1) then converting to a daily rate including leap years ((1 + y)**(1/1461) - 1)
+        NewSavings = Savings + InterestPayment
+        DBCursor.execute("UPDATE BankingAccounts SET Savings = %s WHERE UserID = %s", (NewSavings, UserID))
+        TotalAccruedInterest += InterestPayment
+
+    # For each Max User, we need to calculate their accrued interest and make the payment
+    MaxMembers = ','.join(str(user) for user in MaxMembers)
+    DBCursor.execute(f"SELECT UserID, Savings FROM BankingAccounts WHERE UserID IN ({MaxMembers})")
+    Result = DBCursor.fetchall()
+    for UserID, Savings in Result:
+        InterestPayment = round(Savings * 0.0001205189, 2) # Computed by taking 4.5% annual to a 4-year rate (y = (1 + 0.045)**4 - 1) then converting to a daily rate including leap years ((1 + y)**(1/1461) - 1)
+        NewSavings = Savings + InterestPayment
+        DBCursor.execute("UPDATE BankingAccounts SET Savings = %s WHERE UserID = %s", (NewSavings, UserID))
+        TotalAccruedInterest += InterestPayment
+
+    # Commit these changes and close the cursor
+    await PaperTradeDB.commit()
+    DBCursor.close() # Close Cursor
+
+    # Generate the embed and files to send to General Channel
+    embed, files = GenerateSavingsInterest(TotalAccruedInterest)
+    # RETURN EMBED AND FILES
+    return embed, files
+
 # Handle new entrant to the Investant server
-async def NewMemberJoined(member, PaperTradeDB, PaperTradeBot, PaperTrade, JobAssignment):
-    # Grab UserID of discord member
+async def NewMemberJoined(member: interactions.Member, PaperTradeDB: mysql.connector.MySQLConnection, PaperTradeBot: interactions.Client, PaperTrade: int, JobAssignment: int, KeepingMembers: TrackingMembers):
+    # Grab UserID of discord member and add to AllMembers list
+    KeepingMembers.AddMember(member)
     UserID = member.user.id
     DBCursor = PaperTradeDB.cursor() # Open Cursor
     DBCursor.execute("SELECT * FROM DiscordUserInfo where UserID = %s", [str(UserID)])
@@ -182,7 +237,7 @@ def GiveJob():
     return Job, Salary
 
 # Retrieve the ID for the Role of the user's job in the discord server
-def GetRoleID(Job):
+def GetRoleID(Job: str):
     RoleIDs = {
         "Plumber": 1076732217994264717,
         "Traveling Circus Clown": 1076732406553399336,
@@ -203,16 +258,14 @@ def GetRoleID(Job):
     return RoleIDs[Job]
 
 # Check if user is in the Investant server
-async def IsMemberInGuild(ctx, UserID, InvestantServerID, PaperTradeBot):
-    InvestantGuild = await interactions.get(PaperTradeBot, interactions.Guild, object_id = InvestantServerID)
-    AllMembers = await InvestantGuild.get_all_members()
-    for member in AllMembers:
+async def IsMemberInGuild(ctx: interactions.CommandContext, UserID: int, KeepingMembers: TrackingMembers):
+    for member in KeepingMembers.AllMembers:
         if member.id == UserID:
+            print("Found You in Members Object")
             return True
     await ctx.send(f"I'm sorry, I don't seem to recall knowing you... Feel free to join!")
     await ctx.send("https://discord.gg/SFUKKjWEjH")
     return False
-
 
 # endregion MAINTENANCE
 # ------------------------------------------------------------------------------------------------------------------------------------------------------------
