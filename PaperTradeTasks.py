@@ -261,7 +261,6 @@ def GetRoleID(Job: str):
 async def IsMemberInGuild(ctx: interactions.CommandContext, UserID: int, KeepingMembers: TrackingMembers):
     for member in KeepingMembers.AllMembers:
         if member.id == UserID:
-            print("Found You in Members Object")
             return True
     await ctx.send(f"I'm sorry, I don't seem to recall knowing you... Feel free to join!")
     await ctx.send("https://discord.gg/SFUKKjWEjH")
