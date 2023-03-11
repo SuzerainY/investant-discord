@@ -231,7 +231,7 @@ def GiveJob():
         "Entrepreneur": (44000, 180000),
         "Politician": (115000, 150000)
     }
-    Job = random.choice(Jobs.keys())
+    Job = random.choice(list(Jobs.keys()))
     SalaryRange = Jobs[Job]
     Salary = random.randint(SalaryRange[0], SalaryRange[1])
     return Job, Salary
