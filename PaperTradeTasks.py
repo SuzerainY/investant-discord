@@ -67,7 +67,7 @@ async def ValidateAllUsers(PaperTradeBot: interactions.Client, KeepingMembers: T
     return NewUsers
 
 # Payout Salaries Event Method
-async def PayoutSalaries(PaperTradeDB: mysql.connector.MySQLConnection):
+async def PayoutSalaries(PaperTradeDB: mysql.connector.MySQLConnection): # Returns (None, None) if no interest payments were made
     # Retrieve all discord members with jobs in the database
     DBCursor = PaperTradeDB.cursor() # Open Cursor
     DBCursor.execute("SELECT DISTINCT UserID, Salary FROM DiscordUserInfo")
@@ -96,7 +96,7 @@ async def PayoutSalaries(PaperTradeDB: mysql.connector.MySQLConnection):
     DBCursor.close() # Close Cursor
 
     embed, files = GenerateSalaryPayoutEmbed(NumEmployees, TotalPayout)
-    return embed, files
+    return embed, files # Return embed and files to send server announcement
 
 # Pay Daily Interest Accrual on Savings Accounts
 async def PayoutSavingsInterest(PaperTradeDB: mysql.connector.MySQLConnection, AllMembers: list[interactions.Member], InvestantPlus: int, InvestantPro: int, InvestantMax: int):
@@ -105,55 +105,71 @@ async def PayoutSavingsInterest(PaperTradeDB: mysql.connector.MySQLConnection, A
     for member in AllMembers:
         Roles = member.roles
         if InvestantPlus in Roles:
-            PlusMembers.append(member.id)
+            PlusMembers.append(str(member.id))
         elif InvestantPro in Roles:
-            ProMembers.append(member.id)
+            ProMembers.append(str(member.id))
         elif InvestantMax in Roles:
-            MaxMembers.append(member.id)
+            MaxMembers.append(str(member.id))
 
     # Keep Track of the Total Accrued Interest Paid
+    InterestProcessed = False # No interest has been paid yet
     TotalAccruedInterest = 0
     DBCursor = PaperTradeDB.cursor() # Open Cursor
 
     # For each Plus User, we need to calculate their accrued interest and make the payment
-    PlusMembers = ','.join(str(user) for user in PlusMembers)
-    DBCursor.execute(f"SELECT UserID, Savings FROM BankingAccounts WHERE UserID IN ({PlusMembers})")
-    Result = DBCursor.fetchall()
-    for UserID, Savings in Result:
-        InterestPayment = round(Savings * 0.00008889427, 2) # Computed by taking 3.3% annual to a 4-year rate (y = (1 + 0.033)**4 - 1) then converting to a daily rate including leap years ((1 + y)**(1/1461) - 1)
-        NewSavings = Savings + InterestPayment
-        DBCursor.execute("UPDATE BankingAccounts SET Savings = %s WHERE UserID = %s", (NewSavings, UserID))
-        TotalAccruedInterest += InterestPayment
+    if len(PlusMembers > 0):
+        PlusMembers = ', '.join(user for user in PlusMembers) # Returns comma and space separated string of UserIDs
+        DBCursor.execute(f"SELECT UserID, Savings FROM BankingAccounts WHERE UserID IN ({PlusMembers})")
+        Result = DBCursor.fetchall() # Returns list of tuples like so: [(UserID, Savings), (UserID, Savings)] where UserID is string and Savings is float
+
+        for UserID, Savings in Result:
+            InterestPayment = round(Savings * 0.00008889427, 2) # Computed by taking 3.3% annual to a 4-year rate (y = (1 + 0.033)**4 - 1) then converting to a daily rate including leap years ((1 + y)**(1/1461) - 1)
+            NewSavings = Savings + InterestPayment
+            DBCursor.execute("UPDATE BankingAccounts SET Savings = %s WHERE UserID = %s", (NewSavings, UserID))
+            TotalAccruedInterest += InterestPayment
+
+        InterestProcessed = True # Changes to the database were made, so this will tell us to commit changes
     
     # For each Pro User, we need to calculate their accrued interest and make the payment
-    ProMembers = ','.join(str(user) for user in ProMembers)
-    DBCursor.execute(f"SELECT UserID, Savings FROM BankingAccounts WHERE UserID IN ({ProMembers})")
-    Result = DBCursor.fetchall()
-    for UserID, Savings in Result:
-        InterestPayment = round(Savings * 0.00010211551, 2) # Computed by taking 3.8% annual to a 4-year rate (y = (1 + 0.038)**4 - 1) then converting to a daily rate including leap years ((1 + y)**(1/1461) - 1)
-        NewSavings = Savings + InterestPayment
-        DBCursor.execute("UPDATE BankingAccounts SET Savings = %s WHERE UserID = %s", (NewSavings, UserID))
-        TotalAccruedInterest += InterestPayment
+    if len(ProMembers > 0):
+        ProMembers = ','.join(str(user) for user in ProMembers)
+        DBCursor.execute(f"SELECT UserID, Savings FROM BankingAccounts WHERE UserID IN ({ProMembers})")
+        Result = DBCursor.fetchall()
+
+        for UserID, Savings in Result:
+            InterestPayment = round(Savings * 0.00010211551, 2) # Computed by taking 3.8% annual to a 4-year rate (y = (1 + 0.038)**4 - 1) then converting to a daily rate including leap years ((1 + y)**(1/1461) - 1)
+            NewSavings = Savings + InterestPayment
+            DBCursor.execute("UPDATE BankingAccounts SET Savings = %s WHERE UserID = %s", (NewSavings, UserID))
+            TotalAccruedInterest += InterestPayment
+
+        InterestProcessed = True # Changes to the database were made, so this will tell us to commit changes
 
     # For each Max User, we need to calculate their accrued interest and make the payment
-    MaxMembers = ','.join(str(user) for user in MaxMembers)
-    DBCursor.execute(f"SELECT UserID, Savings FROM BankingAccounts WHERE UserID IN ({MaxMembers})")
-    Result = DBCursor.fetchall()
-    for UserID, Savings in Result:
-        InterestPayment = round(Savings * 0.0001205189, 2) # Computed by taking 4.5% annual to a 4-year rate (y = (1 + 0.045)**4 - 1) then converting to a daily rate including leap years ((1 + y)**(1/1461) - 1)
-        NewSavings = Savings + InterestPayment
-        DBCursor.execute("UPDATE BankingAccounts SET Savings = %s WHERE UserID = %s", (NewSavings, UserID))
-        TotalAccruedInterest += InterestPayment
+    if len(MaxMembers > 0):
+        MaxMembers = ','.join(str(user) for user in MaxMembers)
+        DBCursor.execute(f"SELECT UserID, Savings FROM BankingAccounts WHERE UserID IN ({MaxMembers})")
+        Result = DBCursor.fetchall()
 
-    # Commit these changes and close the cursor
-    PaperTradeDB.commit()
-    DBCursor.close() # Close Cursor
+        for UserID, Savings in Result:
+            InterestPayment = round(Savings * 0.0001205189, 2) # Computed by taking 4.5% annual to a 4-year rate (y = (1 + 0.045)**4 - 1) then converting to a daily rate including leap years ((1 + y)**(1/1461) - 1)
+            NewSavings = Savings + InterestPayment
+            DBCursor.execute("UPDATE BankingAccounts SET Savings = %s WHERE UserID = %s", (NewSavings, UserID))
+            TotalAccruedInterest += InterestPayment
 
-    # Generate the embed and files to send to General Channel
-    embed, files = GenerateSavingsInterest(TotalAccruedInterest)
-    # RETURN EMBED AND FILES
-    return embed, files
+        InterestProcessed = True # Changes to the database were made, so this will tell us to commit changes
 
+    if InterestProcessed: # Changes were made that need to be committed if True
+        PaperTradeDB.commit() # Commit these changes and close the cursor
+        DBCursor.close() # Close Cursor
+        embed, files = GenerateSavingsInterest(TotalAccruedInterest) # Generate the embed and files to send to General Channel
+        # RETURN EMBED AND FILES
+        return embed, files
+    else: # No changes were made, return None, None
+        DBCursor.close() # Close Cursor
+        embed, files = None, None # No interest was paid, don't send any embed
+        # RETURN EMBED AND FILES
+        return embed, files
+    
 # Handle new entrant to the Investant server
 async def NewMemberJoined(member: interactions.Member, PaperTradeDB: mysql.connector.MySQLConnection, PaperTradeBot: interactions.Client, PaperTrade: int, JobAssignment: int, KeepingMembers: TrackingMembers):
     # Grab UserID of discord member and add to AllMembers list
