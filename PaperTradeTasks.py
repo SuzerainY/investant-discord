@@ -117,7 +117,7 @@ async def PayoutSavingsInterest(PaperTradeDB: mysql.connector.MySQLConnection, A
     DBCursor = PaperTradeDB.cursor() # Open Cursor
 
     # For each Plus User, we need to calculate their accrued interest and make the payment
-    if len(PlusMembers > 0):
+    if len(PlusMembers) > 0:
         PlusMembers = ', '.join(user for user in PlusMembers) # Returns comma and space separated string of UserIDs
         DBCursor.execute(f"SELECT UserID, Savings FROM BankingAccounts WHERE UserID IN ({PlusMembers})")
         Result = DBCursor.fetchall() # Returns list of tuples like so: [(UserID, Savings), (UserID, Savings)] where UserID is string and Savings is float
@@ -131,7 +131,7 @@ async def PayoutSavingsInterest(PaperTradeDB: mysql.connector.MySQLConnection, A
         InterestProcessed = True # Changes to the database were made, so this will tell us to commit changes
     
     # For each Pro User, we need to calculate their accrued interest and make the payment
-    if len(ProMembers > 0):
+    if len(ProMembers) > 0:
         ProMembers = ','.join(str(user) for user in ProMembers)
         DBCursor.execute(f"SELECT UserID, Savings FROM BankingAccounts WHERE UserID IN ({ProMembers})")
         Result = DBCursor.fetchall()
@@ -145,7 +145,7 @@ async def PayoutSavingsInterest(PaperTradeDB: mysql.connector.MySQLConnection, A
         InterestProcessed = True # Changes to the database were made, so this will tell us to commit changes
 
     # For each Max User, we need to calculate their accrued interest and make the payment
-    if len(MaxMembers > 0):
+    if len(MaxMembers) > 0:
         MaxMembers = ','.join(str(user) for user in MaxMembers)
         DBCursor.execute(f"SELECT UserID, Savings FROM BankingAccounts WHERE UserID IN ({MaxMembers})")
         Result = DBCursor.fetchall()
