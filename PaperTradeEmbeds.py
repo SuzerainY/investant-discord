@@ -142,7 +142,7 @@ def GeneratePortfolioEmbed(Positions: list, UserCashBalance: float, UserCashProc
     if Gold:
         embed = interactions.Embed(
             title = "Investant | Individual Brokerage Account",
-            description = "A Current View of all Balances Tied to your Investant Portfolio",
+            description = "A Current View of all Balances Tied to Your Investant Portfolio",
             color = 0xEBA773
         )
         ImageFile4 = interactions.File(filename = "Images/FaviconGOLD.png")
@@ -151,7 +151,7 @@ def GeneratePortfolioEmbed(Positions: list, UserCashBalance: float, UserCashProc
     else:
         embed = interactions.Embed(
             title = "Investant | Individual Brokerage Account",
-            description = "A Current View of all Balances Tied to your Investant Portfolio",
+            description = "A Current View of all Balances Tied to Your Investant Portfolio",
             color = 0x40C9FF
         )
         ImageFile4 = interactions.File(filename = "Images/FaviconWHITE.png")
