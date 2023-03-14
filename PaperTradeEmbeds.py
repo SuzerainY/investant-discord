@@ -98,7 +98,8 @@ def GenerateITMMEmbed(Positions: list, ITMMCashBalance: float, ITMMCashProceeds:
 
     # Fetch Data from Yahoo Finance API
     symbols = [position[3] for position in Positions]
-    data = yf.download(symbols, period='1d', interval="1d", group_by='ticker', progress=False)
+    prices = [round(yf.Ticker(symbol).history()['Close'][-1], 2) for  symbol in symbols] # Returns list of current prices for each stock symbol in symbols
+    dictPrices = dict(zip(symbols, prices)) # zip to dictionary for ease of indexing by symbol
 
     # Calculate Outstanding Investments of Fund
     ITMMTotalMarketValue = 0
@@ -108,7 +109,7 @@ def GenerateITMMEmbed(Positions: list, ITMMCashBalance: float, ITMMCashProceeds:
         quantity = position[4]
         AvgCost = position[5]
         TotalCost = position[6]
-        price = data[symbol].iloc[-1]['Close']
+        price = dictPrices[symbol]
         ITMMTotalMarketValue += (quantity * price)
         ITMMUnrealizedGain += ((price - AvgCost) * quantity)
 
@@ -164,7 +165,8 @@ def GeneratePortfolioEmbed(Positions: list, UserCashBalance: float, UserCashProc
 
     # Fetch Data from Yahoo Finance API
     symbols = [position[2] for position in Positions]
-    data = yf.download(symbols, period='1d', interval="1d", group_by='ticker', progress=False)
+    prices = [round(yf.Ticker(symbol).history()['Close'][-1], 2) for  symbol in symbols] # Returns list of current prices for each stock symbol in symbols
+    dictPrices = dict(zip(symbols, prices)) # zip to dictionary for ease of indexing by symbol
 
     # Calculate Outstanding Investments
     TotalMarketValue = 0
@@ -174,7 +176,7 @@ def GeneratePortfolioEmbed(Positions: list, UserCashBalance: float, UserCashProc
         quantity = position[3]
         AvgCost = position[4]
         TotalCost = position[5]
-        price = data[symbol].iloc[-1]['Close']
+        price = dictPrices[symbol]
         TotalMarketValue += (quantity * price)
         UnrealizedGain += ((price - AvgCost) * quantity)
 

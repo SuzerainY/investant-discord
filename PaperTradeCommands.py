@@ -70,7 +70,7 @@ async def BuyMainMethod(ctx: interactions.CommandContext, PaperTradeBot: interac
     # Require variables: what stock, what price
     ticker = ticker.upper()
     stock = yf.Ticker(ticker)
-    price = round(stock.history().tail(1)['Close'][0], 2)
+    price = round(stock.history()['Close'][-1], 2)
 
     # If price = $0.00, they could buy infinite shares, so we don't allow
     if price == 0:
@@ -245,7 +245,7 @@ async def SellMainMethod(ctx: interactions.CommandContext, PaperTradeBot: intera
 
                 # Main Sell Process
                 stock = yf.Ticker(ticker)
-                price = round(stock.history().tail(1)['Close'][0], 2)
+                price = round(stock.history()['Close'][-1], 2)
                 proceeds = round(price * quantity, 2)
                 gainloss = round(proceeds - (CurrentAvgCost * quantity), 2)
 
@@ -315,7 +315,7 @@ async def SellMainMethod(ctx: interactions.CommandContext, PaperTradeBot: intera
 
             # Main Sell Process
             stock = yf.Ticker(ticker)
-            price = round(stock.history().tail(1)['Close'][0], 2)
+            price = round(stock.history()['Close'][-1], 2)
             proceeds = round(price * quantity, 2)
             gainloss = round(proceeds - (CurrentAvgCost * quantity), 2)
 
@@ -352,8 +352,8 @@ async def SellMainMethod(ctx: interactions.CommandContext, PaperTradeBot: intera
 # /price MAIN METHOD
 async def PriceMainMethod(ctx: interactions.CommandContext, ticker: str):
     ticker = ticker.upper() # Make the ticker uppercase
-    equity = yf.Ticker(ticker)
-    price = round(equity.history().tail(1)['Close'][0], 2)
+    stock = yf.Ticker(ticker)
+    price = round(stock.history()['Close'][-1], 2)
     await ctx.send(f"The current price of {ticker} is ${price:,.2f}")
     return
 
