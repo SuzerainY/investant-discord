@@ -371,7 +371,8 @@ async def NewsMainMethod(ctx: interactions.CommandContext, GuildMember: interact
 
 # /revenue MAIN METHOD
 async def RevenueMainMethod(ctx: interactions.CommandContext, ticker: str):
-    stock = yq.Ticker(ticker.upper())
+    ticker = ticker.upper()
+    stock = yq.Ticker(ticker)
     Data = stock.income_statement(frequency = 'a')
 
     Revenue, RevGrowth, Year = [], [], []
