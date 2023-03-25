@@ -523,7 +523,7 @@ async def TransferMainMethod(ctx: interactions.CommandContext, withdraw: str, de
                 case "checking": # Depositing to checking
                     # Query database for their current checking balance
                     DBCursor.execute("SELECT Checking FROM BankingAccounts WHERE UserID = %s", [str(UserID)])
-                    CheckingBalance = round(DBCursor.fetchone()[0])
+                    CheckingBalance = round(DBCursor.fetchone()[0], 2)
                     
                     # Calculate new values for Cash Balance and Checking Balance
                     NewCashBalance = round(CashBalance - TransferAmount, 2)
@@ -567,7 +567,7 @@ async def TransferMainMethod(ctx: interactions.CommandContext, withdraw: str, de
         case "checking": # Withdrawing from checking
             # Validate whether the user has sufficient funds to make the transer
             DBCursor.execute("SELECT Checking FROM BankingAccounts WHERE UserID = %s", [str(UserID)])
-            CheckingBalance = round(DBCursor.fetchone()[0])
+            CheckingBalance = round(DBCursor.fetchone()[0], 2)
 
             if TransferAmount > CheckingBalance: # User attempted to transfer more than is available in their checking account balance
                 DBCursor.close() # Close Cursor
