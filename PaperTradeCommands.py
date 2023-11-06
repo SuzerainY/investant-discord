@@ -64,8 +64,8 @@ async def MainPortfolioMethod(ctx: interactions.CommandContext, PaperTradeDB: my
     return
 
 # /buy MAIN METHOD
-async def BuyMainMethod(ctx: interactions.CommandContext, PaperTradeBot: interactions.Client, UserSeesOnly: bool, PaperTradeDB: mysql.connector.MySQLConnection, GuildMember: interactions.GuildMember, UserID: int, InvestantServerID: int, CashFlow: int,
-                        InvestantTotalMoneyMarketFund: int, PaperTrade: int, quantity: int, ticker: str, itmm: bool):
+async def BuyMainMethod(ctx: interactions.CommandContext, PaperTradeBot: interactions.Client, UserSeesOnly: bool, PaperTradeDB: mysql.connector.MySQLConnection, UserID: int, InvestantServerID: int, CashFlow: int, InvestantTotalMoneyMarketFund: int,
+                        PaperTrade: int, quantity: int, ticker: str, itmm: bool):
     
     # Require variables: what stock, what price
     ticker = ticker.upper()
@@ -101,7 +101,7 @@ async def BuyMainMethod(ctx: interactions.CommandContext, PaperTradeBot: interac
 
         if cost > UserCashBalance: # User attempted to purchase more than they could afford
             DBCursor.close() # Close Cursor
-            await ctx.send(f"Insufficient Funds. I'm sorry, {GuildMember.name}, your current portfolio cash balance is ${UserCashBalance:,.2f}.", ephemeral = UserSeesOnly)
+            await ctx.send(f"Insufficient Funds. I'm sorry, <@{UserID}>, your current portfolio cash balance is ${UserCashBalance:,.2f}.", ephemeral = UserSeesOnly)
             return
 
         # Check if user already owns this equity
@@ -140,7 +140,7 @@ async def BuyMainMethod(ctx: interactions.CommandContext, PaperTradeBot: interac
 
         # Send message to PaperTrade channel and Cash Flow channel
         await ctx.send(f"<@{UserID}> bought {quantity} shares of {ticker} for ${cost:,.2f} at ${price:,.2f} per share")
-        await CashFlowChannel.send(f"**{GuildMember.name}** just bought {quantity} shares of {ticker} for ${cost:,.2f}")
+        await CashFlowChannel.send(f"**{ctx.user.username}** just bought {quantity} shares of {ticker} for ${cost:,.2f}")
         return
     
     # This is a transaction for the Investant Total Money Market Fund
@@ -165,7 +165,7 @@ async def BuyMainMethod(ctx: interactions.CommandContext, PaperTradeBot: interac
 
         if cost > ITMMCashBalance: # Hedge Fund Manager attempted to purchase more than the fund can afford
             DBCursor.close() # Close Cursor
-            await ctx.send(f"Insufficient Funds. I'm sorry, {GuildMember.name}, the **Investant Total Money Market Fund** currently has a cash balance of ${ITMMCashBalance:,.2f}.", ephemeral = UserSeesOnly)
+            await ctx.send(f"Insufficient Funds. I'm sorry, <@{UserID}>, the **Investant Total Money Market Fund** currently has a cash balance of ${ITMMCashBalance:,.2f}.", ephemeral = UserSeesOnly)
             return
 
         # Check if ITMM already holds this equity. We only need Quantity and AvgCost for calcs, so grab them if they exist
