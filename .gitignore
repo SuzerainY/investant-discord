@@ -1,8 +1,8 @@
 # Environment Variables Module (PaperTradeConfig)
-*/PaperTradeConfig.py
+PaperTradeConfig.py
 
 # Database Notes (PaperTradeDBNotes)
-*/PaperTradeDBNotes
+PaperTradeDBNotes.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
