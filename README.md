@@ -1,21 +1,7 @@
-# PaperTrade Dependencies
-
-
-pip install...
-* discord-py-interactions | version 4.4.0
-* yfinance
-* yahooquery
-* numpy
-* pandas
-* mysql-connector-python | version 8.0.32
-* interactions-tasks | version 1.0.0
-* interactions-files | version 1.1.5
-
-
 # PaperTrade Features
 
 
-Planned features for multiple assets of the platform and subcategories. Highlighted in red are currently being added, modified, or planned for future addition.
+Planned features for multiple assets of the platform and subcategories. Some features currently being added, modified, or planned for future addition.
 
 When features are successfully added, a community post should be sent informing users.
 
@@ -30,6 +16,20 @@ When features are successfully added, a community post should be sent informing 
     * Savings accounts earn a high yield we adjust periodically with market
     * /bank command to view bank accounts
     * /transfer &lt;checking/savings> &lt;checking savings> transfer from left to right
+
+
+### PaperTrade Dependencies
+
+
+pip install...
+* discord-py-interactions | version 4.4.0
+* yfinance
+* yahooquery
+* numpy
+* pandas
+* mysql-connector-python | version 8.0.32
+* interactions-tasks | version 1.0.0
+* interactions-files | version 1.1.5
 
 
 ## Paper Trade (Standard):
