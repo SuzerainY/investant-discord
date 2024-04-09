@@ -1,5 +1,6 @@
 # PaperTrade Dependencies
 
+
 pip install...
 * discord-py-interactions | version 4.4.0
 * yfinance
