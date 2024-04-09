@@ -1,3 +1,16 @@
+# PaperTrade Dependencies
+
+pip install...
+* discord-py-interactions | version 4.4.0
+* yfinance
+* yahooquery
+* numpy
+* pandas
+* mysql-connector-python | version 8.0.32
+* interactions-tasks | version 1.0.0
+* interactions-files | version 1.1.5
+
+
 # PaperTrade Features
 
 
@@ -7,6 +20,7 @@ When features are successfully added, a community post should be sent informing 
 
 
 # Discord Features:
+
 
 ### Only Available in [Investant Discord](https://discord.gg/SFUKKjWEjH)
 * Checking and Savings Accounts and commands
